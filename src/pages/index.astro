@@ -1,11 +1,169 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+import { TokenClient, networks } from "../lib/token-client.js";
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const contract = new TokenClient();
+const contractInfo = contract.getContractInfo();
+
+// Tu dirección
+const yourAddress = "GCMEG2TWMFI4VBIY2WLTALKN556NK6QTXJ6FUIHZLFLIQE6ZU2444UXJ";
+
+// Obtener información del token
+const nameResult = await contract.name();
+const symbolResult = await contract.symbol();
+const decimalsResult = await contract.decimals();
+const totalSupplyResult = await contract.total_supply();
+const balanceResult = await contract.balance({ id: yourAddress });
+
+const tokenName = nameResult.result;
+const tokenSymbol = symbolResult.result;
+const tokenDecimals = decimalsResult.result;
+const totalSupply = totalSupplyResult.result;
+const yourBalance = balanceResult.result;
+
+function formatBalance(balance: string, decimals: string) {
+  try {
+    const divisor = Math.pow(10, parseInt(decimals));
+    return (parseInt(balance) / divisor).toLocaleString();
+  } catch {
+    return "0";
+  }
+}
 ---
 
-<Layout>
-	<Welcome />
-</Layout>
+<html lang="es">
+  <head>
+    <title>Buen Dia Token (BDB)</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        min-height: 100vh;
+      }
+      .container {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        margin: 20px 0;
+      }
+      h1 {
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      .token-info {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 20px;
+        border-radius: 10px;
+        margin: 15px 0;
+      }
+      .contract-id,
+      .wasm-hash {
+        word-break: break-all;
+        font-size: 0.8em;
+        opacity: 0.8;
+        font-family: monospace;
+      }
+      .simulation-notice {
+        background: rgba(255, 215, 0, 0.2);
+        padding: 15px;
+        border-radius: 10px;
+        margin: 15px 0;
+        font-size: 0.9em;
+        border-left: 4px solid gold;
+      }
+      .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 20px;
+      }
+      @media (max-width: 768px) {
+        .info-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>🚀 {tokenName} ({tokenSymbol})</h1>
+      <p style="text-align: center; opacity: 0.8;">
+        Tu token personalizado en Stellar Soroban
+      </p>
+    </header>
+
+    <main>
+      <div class="container">
+        <div class="simulation-notice">
+          <strong>⚠️ Frontend de Demostración:</strong> Usando configuración local
+          de <code>.stellar/</code>
+        </div>
+
+        <section>
+          <h2>📊 Información del Token</h2>
+          <div class="token-info">
+            <p><strong>Nombre:</strong> {tokenName}</p>
+            <p><strong>Símbolo:</strong> {tokenSymbol}</p>
+            <p><strong>Decimales:</strong> {tokenDecimals}</p>
+            <p>
+              <strong>Total Supply:</strong>
+              {formatBalance(totalSupply, tokenDecimals)}
+              {tokenSymbol}
+            </p>
+            <p>
+              <strong>Tu Balance:</strong>
+              {formatBalance(yourBalance, tokenDecimals)}
+              {tokenSymbol}
+            </p>
+          </div>
+        </section>
+
+        <section>
+          <h2>🔧 Configuración del Contrato</h2>
+          <div class="token-info">
+            <p class="contract-id">
+              <strong>Contract ID:</strong>
+              {contractInfo.contractId}
+            </p>
+            <p class="wasm-hash">
+              <strong>WASM Hash:</strong>
+              {contractInfo.wasmHash}
+            </p>
+            <p><strong>Red:</strong> {contractInfo.network}</p>
+            <p><strong>RPC URL:</strong> {contractInfo.rpcUrl}</p>
+          </div>
+        </section>
+
+        <section>
+          <h2>👥 Balances Conocidos</h2>
+          <div class="info-grid">
+            <div class="token-info">
+              <h3>andreabdb</h3>
+              <p><strong>Dirección:</strong> GCMEG...4UXJ</p>
+              <p><strong>Balance:</strong> 950,000 {tokenSymbol}</p>
+            </div>
+            <div class="token-info">
+              <h3>bob</h3>
+              <p><strong>Dirección:</strong> GD3YA...Y33</p>
+              <p><strong>Balance:</strong> 50,000 {tokenSymbol}</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer style="text-align: center; margin-top: 40px; opacity: 0.7;">
+      <p>
+        ✨ Desarrollado con Stellar Soroban y Astro | Configuración: <code
+          >.stellar/</code
+        >
+      </p>
+    </footer>
+  </body>
+</html>
